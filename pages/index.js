@@ -1,5 +1,5 @@
 import styles from "../styles/Home.module.css";
-import { useState, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useCycle, AnimatePresence } from "framer-motion";
 
 const mainVariants = {
@@ -20,8 +20,20 @@ const buttonVariants = {
     opacity: 1,
     transition: { delay: 2, duration: 2 },
   },
+  initial2: {
+    opacity: 1,
+    y: "60vh",
+  },
+  final2: {
+    opacity: 1,
+    y: ["60vh", "65vh", "60vh"],
+    transition: { repeat: Infinity, ease: "easeOut" },
+  },
+  hover: {
+    color: "grey",
+  },
   exit: {
-    opacity: 0,
+    y: "400vh",
     transition: { duration: 2 },
   },
 };
@@ -29,55 +41,81 @@ const buttonVariants = {
 const titleIntro = {
   initial: { opacity: 0, y: "40vh", scale: 3 },
   final: { opacity: 1, transition: { duration: 2 } },
+  initial2: { opacity: 1, y: "40vh", scale: 3 },
+  final2: { y: 0, transition: { delay: 1, duration: 2 }, scale: 0.5 },
 };
 
-const titleHeader = {
-  initial: { opacity: 1, y: "40vh", scale: 3 },
-  final: { y: 0, transition: { duration: 2 }, scale: 1 },
+const headerOptions = {
+  initialLeft: { opacity: 0, x: "50vw" },
+  initialRight: { opacity: 0, x: "-50vw" },
+  final: { opacity: 1, x: 0, transition: { duration: 2 } },
 };
 
 export default function Home() {
   const [state, setState] = useState(false);
-  const [titleAnimation, cycleTitleAnimation] = useCycle(
-    titleIntro,
-    titleHeader
+
+  const Title = () => (
+    <motion.img
+      key={state}
+      className={styles.logo}
+      src="/logo.svg"
+      variants={titleIntro}
+      initial={state ? "initial2" : "initial"}
+      animate={state ? "final2" : "final"}
+    />
   );
 
-  const firstEffect = useRef(true);
-  useLayoutEffect(() => {
-    if (state) {
-      console.log("Clicked");
-      cycleTitleAnimation();
-    }
-  }, [state]);
-
-  const Title = () => <motion.h1 variants={titleAnimation}>DT</motion.h1>;
-
-  const Header = () => {
-    return (
-      <motion.div className={styles.header}>
+  const Header = () => (
+    <motion.div className={styles.header}>
+      <div className={styles.headerOption}>
+        {state && (
+          <motion.h1
+            variants={headerOptions}
+            initial="initialLeft"
+            animate="final"
+          >
+            OPTION1
+          </motion.h1>
+        )}
+      </div>
+      <div className={styles.headerOption}>
         <Title />
-      </motion.div>
+      </div>
+      <div className={styles.headerOption}>
+        {state && (
+          <motion.h1
+            variants={headerOptions}
+            initial="initialRight"
+            animate="final"
+          >
+            OPTION2
+          </motion.h1>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  const DownArrow = (props) => {
+    const [animationFinished, setAnimationFinished] = useState(false);
+
+    const setState = props.setState;
+
+    return (
+      <motion.button
+        key={animationFinished}
+        className={styles.downArrow}
+        onClick={() => setState(true)}
+        variants={buttonVariants}
+        initial={animationFinished ? "initial2" : "initial"}
+        animate={animationFinished ? "final2" : "final"}
+        whileHover="hover"
+        onAnimationComplete={() => setAnimationFinished(true)}
+        exit="exit"
+      >
+        &#9660;
+      </motion.button>
     );
   };
-
-  const DownArrow = () => (
-    <AnimatePresence>
-      {!state && (
-        <motion.button
-          key={styles.downArrow}
-          className={styles.downArrow}
-          onClick={() => setState(true)}
-          variants={buttonVariants}
-          initial="initial"
-          animate="final"
-          exit="exit"
-        >
-          &#9660;
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
 
   return (
     <motion.div
@@ -87,7 +125,9 @@ export default function Home() {
       animate="final"
     >
       <Header />
-      <DownArrow />
+      <AnimatePresence>
+        {!state && <DownArrow setState={setState} />}
+      </AnimatePresence>
     </motion.div>
   );
 }
