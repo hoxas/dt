@@ -1,6 +1,11 @@
-import styles from "../styles/Home.module.css";
+import styles from "../styles/Home.module.scss";
 import { useState, useEffect, useRef } from "react";
-import { motion, useCycle, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useCycle,
+  AnimatePresence,
+  useAnimationControls,
+} from "framer-motion";
 
 const mainVariants = {
   initial: {
@@ -23,6 +28,7 @@ const buttonVariants = {
   initial2: {
     opacity: 1,
     y: "60vh",
+    transition: { duration: 0.5 },
   },
   final2: {
     opacity: 1,
@@ -30,7 +36,9 @@ const buttonVariants = {
     transition: { repeat: Infinity, ease: "easeOut" },
   },
   hover: {
-    color: "grey",
+    color: "#c4c4c4",
+    y: "65vh",
+    transition: { duration: 0.5 },
   },
   exit: {
     y: "400vh",
@@ -51,8 +59,18 @@ const headerOptions = {
   final: { opacity: 1, x: 0, transition: { duration: 2 } },
 };
 
+const contentVariants = {
+  initial: { x: "-400vw" },
+  final: { x: 0, transition: { duration: 2 } },
+  exit: { x: "400vw", transition: { duration: 2 } },
+};
+
 export default function Home() {
   const [state, setState] = useState(false);
+  const [pageState, setPageState] = useState(0);
+
+  useEffect(() => console.log("PageState: " + pageState), [pageState]);
+  useEffect(() => console.log("State: " + state), [state]);
 
   const Title = () => (
     <motion.img
@@ -73,8 +91,10 @@ export default function Home() {
             variants={headerOptions}
             initial="initialLeft"
             animate="final"
+            onAnimationComplete={() => console.log("Animation Complete")}
+            onClick={() => setPageState(1)}
           >
-            OPTION1
+            OPTION
           </motion.h1>
         )}
       </div>
@@ -87,8 +107,9 @@ export default function Home() {
             variants={headerOptions}
             initial="initialRight"
             animate="final"
+            onClick={() => setPageState(2)}
           >
-            OPTION2
+            OPTION
           </motion.h1>
         )}
       </div>
@@ -117,6 +138,36 @@ export default function Home() {
     );
   };
 
+  const Content = (props) => (
+    <motion.div
+      key="content"
+      className={styles.content}
+      variants={contentVariants}
+      initial="initial"
+      animate="final"
+      exit="exit"
+    >
+      <h1>{props.header}</h1>
+      <p>{props.text}</p>
+    </motion.div>
+  );
+
+  const PageContentSelector = (props) => {
+    if (props.pageState == 1) {
+      const header = "Content";
+      const text = `In order to better reach and improve the web experience for enterprise
+          users, we are adding non-essential web cookies to certain subdomains
+          that specifically market our products to businesses. This change is
+          only on subdomains that reach enterprise customers, and all other
+          GitHub subdomains will continue to operate as-is. Boo-hoo.`;
+      return <Content header={header} text={text} />;
+    } else if (props.pageState == 2) {
+      const header = "GitHub Copilot";
+      const text = `Get suggestions for lines of code and entire functions in real‑time`;
+      return <Content header={header} text={text} />;
+    }
+  };
+
   return (
     <motion.div
       className={styles.main}
@@ -127,6 +178,10 @@ export default function Home() {
       <Header />
       <AnimatePresence>
         {!state && <DownArrow setState={setState} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {pageState == 1 && <PageContentSelector pageState={pageState} />}
+        {pageState == 2 && <PageContentSelector pageState={pageState} />}
       </AnimatePresence>
     </motion.div>
   );
